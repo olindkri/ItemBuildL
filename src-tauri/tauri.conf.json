@@ -12,9 +12,14 @@
   "app": {
     "windows": [
       {
-        "title": "ItemBuildL",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Twitch Advisor",
+        "width": 420,
+        "height": 640,
+        "minWidth": 360,
+        "minHeight": 400,
+        "resizable": true,
+        "decorations": true
       }
     ],
     "security": {
