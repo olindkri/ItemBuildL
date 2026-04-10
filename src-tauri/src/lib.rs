@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod game_state;
+mod engine;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
