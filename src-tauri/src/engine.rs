@@ -73,7 +73,7 @@ pub struct GameAdvice {
 
 // ── Engine state (persists across polls) ──────────────────────────────────
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct EngineState {
     pub locked_build_path: Option<BuildPath>,
     pub yun_tal_viable: bool,
@@ -83,10 +83,22 @@ pub struct EngineState {
     pub summoner_name: Option<String>,
 }
 
+impl Default for EngineState {
+    fn default() -> Self {
+        EngineState {
+            locked_build_path: None,
+            yun_tal_viable: true,
+            first_back_done: false,
+            peak_gold_before_first_buy: 0.0,
+            previous_item_ids: Vec::new(),
+            summoner_name: None,
+        }
+    }
+}
+
 impl EngineState {
     pub fn reset(&mut self) {
         *self = EngineState::default();
-        self.yun_tal_viable = true;
     }
 }
 
@@ -290,7 +302,7 @@ fn is_poke_champion(name: &str) -> bool {
 
 // ── Objective tip ──────────────────────────────────────────────────────────
 
-pub fn objective_tip(snapshot: &GameSnapshot, _my_team: &str) -> Option<String> {
+pub fn objective_tip(snapshot: &GameSnapshot) -> Option<String> {
     let events = &snapshot.events.events;
     let game_time = snapshot.game_data.game_time;
 
@@ -323,7 +335,7 @@ pub fn objective_tip(snapshot: &GameSnapshot, _my_team: &str) -> Option<String> 
 
 // ── Core build items ───────────────────────────────────────────────────────
 
-pub fn core_build_items(path: &BuildPath, built: &[String], yun_tal_viable: bool) -> Vec<SuggestedItem> {
+pub(crate) fn core_build_items(path: &BuildPath, built: &[String], yun_tal_viable: bool) -> Vec<SuggestedItem> {
     let core: &[(&str, &str)] = match path {
         BuildPath::CritLethality => &[
             ("The Collector",     "Core lethality — execute syncs with poison"),
@@ -424,7 +436,7 @@ pub fn generate_advice(
         support_tip,
         lane_tip,
         team_fight_tip: team_fight_tip(&enemies, snapshot.game_data.game_time),
-        objective_tip: objective_tip(snapshot, my_team),
+        objective_tip: objective_tip(snapshot),
         game_time: snapshot.game_data.game_time,
     }
 }
