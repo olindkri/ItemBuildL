@@ -15,6 +15,22 @@ Uses Riot's official [Live Client Data API](https://developer.riotgames.com/docs
 
 ---
 
+## Running from a pre-built installer
+
+### Mac (Apple Silicon)
+
+1. Download `ItemBuildL_0.1.0_aarch64.dmg` from [Releases](https://github.com/olindkri/ItemBuildL/releases)
+2. Open the `.dmg`, drag **ItemBuildL** to Applications
+3. First launch: right-click → Open (macOS will ask to confirm since the app is unsigned)
+4. Launch League of Legends and start a game — the advisor will update automatically
+
+### Windows
+
+1. Download `ItemBuildL_0.1.0_x64-setup.exe` from [Releases](https://github.com/olindkri/ItemBuildL/releases)
+2. Run the installer (Windows Defender SmartScreen may warn — click "More info" → "Run anyway" since the app is unsigned)
+3. Launch the app from the Start Menu or Desktop shortcut
+4. Start a League of Legends game — the advisor will update automatically
+
 ---
 
 ## Building from source
