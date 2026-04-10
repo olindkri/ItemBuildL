@@ -20,7 +20,7 @@ export function LanePanel({ advice }: Props) {
         </div>
       )}
 
-      {advice.lane_tip && advice.lane_tip.split(' | ').map((tip, i) => (
+      {advice.lane_tip && advice.lane_tip.map((tip, i) => (
         <div key={i} className="tip-row">
           <span className="tip-label">Matchup</span>
           <span className="tip-text">{tip}</span>

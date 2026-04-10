@@ -12,7 +12,7 @@ export interface GameAdvice {
   suggested_items: SuggestedItem[];
   first_back_note: string | null;
   support_tip: string | null;
-  lane_tip: string | null;
+  lane_tip: string[] | null;
   team_fight_tip: string;
   objective_tip: string | null;
   game_time: number;

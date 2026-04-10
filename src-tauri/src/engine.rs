@@ -4,14 +4,6 @@ use crate::game_state::{GameSnapshot, PlayerData};
 // ── Knowledge base structs ─────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
-pub struct ItemEntry {
-    pub id: String,
-    pub name: String,
-    pub cost: u32,
-    pub category: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct SynergyEntry {
     pub champion: String,
     pub tip: String,
@@ -27,19 +19,16 @@ pub struct MatchupEntry {
 
 #[derive(Debug)]
 pub struct KnowledgeBase {
-    pub items: Vec<ItemEntry>,
     pub synergies: Vec<SynergyEntry>,
     pub matchups: Vec<MatchupEntry>,
 }
 
 pub fn load_knowledge_base() -> KnowledgeBase {
-    let items: Vec<ItemEntry> = serde_json::from_str(include_str!("knowledge/items.json"))
-        .expect("Failed to parse items.json");
     let synergies: Vec<SynergyEntry> = serde_json::from_str(include_str!("knowledge/synergies.json"))
         .expect("Failed to parse synergies.json");
     let matchups: Vec<MatchupEntry> = serde_json::from_str(include_str!("knowledge/matchups.json"))
         .expect("Failed to parse matchups.json");
-    KnowledgeBase { items, synergies, matchups }
+    KnowledgeBase { synergies, matchups }
 }
 
 // ── Output types ──────────────────────────────────────────────────────────
@@ -65,7 +54,7 @@ pub struct GameAdvice {
     pub suggested_items: Vec<SuggestedItem>,
     pub first_back_note: Option<String>,
     pub support_tip: Option<String>,
-    pub lane_tip: Option<String>,
+    pub lane_tip: Option<Vec<String>>,   // changed
     pub team_fight_tip: String,
     pub objective_tip: Option<String>,
     pub game_time: f32,
@@ -128,11 +117,20 @@ pub fn select_build_path(enemies: &[&PlayerData], state: &mut EngineState) -> Bu
     if let Some(path) = &state.locked_build_path {
         return path.clone();
     }
+
     let tank_count = enemies.iter()
         .filter(|p| TANK_CHAMPIONS.contains(&p.champion_name.as_str()))
         .count();
+
+    // Don't lock the path until after first back — we need gold info for Yun Tal
+    if !state.first_back_done {
+        return if tank_count >= 3 { BuildPath::OnHit } else { BuildPath::CritLethality };
+    }
+
     let path = if tank_count >= 3 {
         BuildPath::OnHit
+    } else if state.yun_tal_viable {
+        BuildPath::PureCrit
     } else {
         BuildPath::CritLethality
     };
@@ -418,14 +416,14 @@ pub fn generate_advice(
         kb.synergies.iter().find(|e| e.champion == s.champion_name).map(|e| e.tip.clone())
     });
 
-    let lane_tip = {
+    let lane_tip: Option<Vec<String>> = {
         let tips: Vec<String> = enemy_bot.iter()
             .filter_map(|p| {
                 kb.matchups.iter().find(|m| m.name == p.champion_name)
                     .map(|m| format!("vs {}: {}", p.champion_name, m.tip))
             })
             .collect();
-        if tips.is_empty() { None } else { Some(tips.join(" | ")) }
+        if tips.is_empty() { None } else { Some(tips) }
     };
 
     GameAdvice {
@@ -487,18 +485,31 @@ mod tests {
     }
 
     #[test]
-    fn test_build_path_locked_after_first_selection() {
+    fn test_build_path_locked_after_first_back() {
         let enemies = vec![make_player("Caitlyn", "CHAOS", "BOTTOM")];
         let refs: Vec<&PlayerData> = enemies.iter().collect();
         let mut state = EngineState::default();
-        select_build_path(&refs, &mut state);
+        state.first_back_done = true;
+        state.yun_tal_viable = false;
+        select_build_path(&refs, &mut state); // locks to CritLethality
         let tanks = vec![
             make_player("Malphite", "CHAOS", "TOP"),
             make_player("Nautilus", "CHAOS", "SUPPORT"),
             make_player("Ornn", "CHAOS", "JUNGLE"),
         ];
         let tank_refs: Vec<&PlayerData> = tanks.iter().collect();
+        // still CritLethality because it was locked
         assert_eq!(select_build_path(&tank_refs, &mut state), BuildPath::CritLethality);
+    }
+
+    #[test]
+    fn test_pure_crit_path_when_yun_tal_viable_after_first_back() {
+        let enemies = vec![make_player("Caitlyn", "CHAOS", "BOTTOM")];
+        let refs: Vec<&PlayerData> = enemies.iter().collect();
+        let mut state = EngineState::default();
+        state.first_back_done = true;
+        state.yun_tal_viable = true;
+        assert_eq!(select_build_path(&refs, &mut state), BuildPath::PureCrit);
     }
 
     #[test]
@@ -619,7 +630,6 @@ mod tests {
     #[test]
     fn test_knowledge_base_loads_without_panic() {
         let kb = load_knowledge_base();
-        assert!(!kb.items.is_empty());
         assert!(!kb.synergies.is_empty());
         assert!(!kb.matchups.is_empty());
     }
