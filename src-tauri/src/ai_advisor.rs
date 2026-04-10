@@ -103,7 +103,7 @@ async fn call_openrouter(
         .build()?;
 
     let body = serde_json::json!({
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "model": "openai/gpt-oss-120b:free",
         "messages": [
             {
                 "role": "system",
