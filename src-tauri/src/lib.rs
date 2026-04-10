@@ -1,6 +1,7 @@
 mod game_state;
 mod engine;
 mod poller;
+mod ai_advisor;
 
 #[tauri::command]
 fn toggle_always_on_top(window: tauri::WebviewWindow, enable: bool) -> Result<(), String> {
@@ -9,12 +10,15 @@ fn toggle_always_on_top(window: tauri::WebviewWindow, enable: bool) -> Result<()
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    dotenvy::dotenv().ok();
+    let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_default();
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![toggle_always_on_top])
         .setup(|app| {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                poller::start_polling(app_handle).await;
+                poller::start_polling(app_handle, api_key).await;
             });
             Ok(())
         })
