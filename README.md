@@ -21,8 +21,12 @@ Uses Riot's official [Live Client Data API](https://developer.riotgames.com/docs
 
 1. Download `ItemBuildL_0.1.0_aarch64.dmg` from [Releases](https://github.com/olindkri/ItemBuildL/releases)
 2. Open the `.dmg`, drag **ItemBuildL** to Applications
-3. First launch: right-click → Open (macOS will ask to confirm since the app is unsigned)
-4. Launch League of Legends and start a game — the advisor will update automatically
+3. If macOS says the app is damaged, run this in Terminal:
+   ```bash
+   xattr -cr /Applications/ItemBuildL.app
+   ```
+4. Launch **ItemBuildL** normally after running that command
+5. Start a League of Legends game — the advisor will update automatically
 
 ### Windows
 
